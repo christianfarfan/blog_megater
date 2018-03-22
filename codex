@@ -1,0 +1,98 @@
+<?PHP
+
+ob_start();
+
+date_default_timezone_set("America/Bogota");
+
+class Conexion  {
+    
+ 
+    
+    private function bd(){
+        $x= new mysqli('localhost','root','','blog_interno_megaterios');
+        return $x;
+    }
+    
+    function alt_arti_reg(){
+        $con= new Conexion();
+        $cone=$con->bd();
+        $mes_actual=date("m");
+        
+        $sql="SELECT articulo.*,autor.* FROM articulo,autor WHERE MONTH(articulo.fecha_publicac) = '$mes_actual' AND articulo.id_autor = any (SELECT autor.id FROM autor ) AND autor.id=articulo.id_autor ORDER BY articulo.cantid_megus DESC";
+        $resul=$cone->query($sql);
+        return $resul;
+    }
+    //$_POST['nombre_usua'],$_FILES,$_POST['fech_nacimi'],$_POST['corre_usua'],$_POST['clave_usua']
+    
+    function registro_usuar($nombre_usua,$foto,$fech_naci,$corre_electro,$contras){
+        $con= new Conexion();
+        $cone=$con->bd();
+        
+        if($nombre_usua != "" && $foto != "" && $fech_naci != "" && $corre_electro != "" && $contras != ""){
+            
+            $sq="SELECT * FROM `usuario` WHERE usuario.nombre = $nombre_usua";
+            $resul=$cone->query($sql);
+            if(mysqli_num_rows($resul) > 0){
+                ?>
+             <script>mensaje(1,"Usuario ya registrado");</script>
+                <?php
+            }else{
+                
+                $ruta='../usuarios/'.$foto['foto_usua']['name'];
+                move_uploaded_file($foto['foto_usua']['tmp_name'],$ruta);
+                
+                $sql="INSERT INTO usuario ( `nombre`, `foto`, `fecha_nac`, `correo_electro`, `contrasena`) VALUES ('$nombre_usua','$ruta','$fech_naci','$corre_electro','$contras') ";
+                $cone->query($sql);
+                
+                if(mysqli_affected_rows($cone) > 0){
+                    ?>
+                    <script>mensaje(3,"Operación exitosa");</script>
+                    <?php
+                }
+            }
+            
+        }else{
+            ?>
+            <script>mensaje(2,"Diligencie formulario");</script>
+            <?php
+        }
+    }
+    
+    
+    function logueo($usuario,$clave){
+          $con= new Conexion();
+          $cone=$con->bd();
+          if($usuario != '' && $clave != ''){
+            $sql="SELECT * FROM `usuario` WHERE usuario.nombre= '$usuario' AND usuario.contrasena='$clave' ";  
+            $resul=$cone->query($sql);
+              
+            if(mysqli_num_rows($resul) == 1){
+                 session_start();
+                 $datos=mysqli_fetch_array($resul);
+                 $nombre=$datos['nombre'];
+                 $foto=$datos['foto'];
+                 $_SESSION['nombreUsua']=$nombre;
+                 $_SESSION['foto']=$foto;
+                 $_SESSION['identificador']=md5($nombre);
+                
+                 $cone->close();
+                header("location:../App/index.php");
+            }else{
+                ?>
+                <script>mensaje(1,"El usuario no exite");</script>
+                <?php
+            }
+          }else{
+              ?>
+             <script>mensaje(2,"Diligencie todos los campos");</script>
+              <?php
+          }
+          $cone->close();
+      }
+      
+      }
+
+ob_end_flush();
+?>
+
+    
